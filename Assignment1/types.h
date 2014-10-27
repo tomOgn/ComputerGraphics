@@ -1,4 +1,5 @@
 #include "GL\glut.h"
+#include "math.h"
 
 /* RGB Triple */
 class Color
@@ -58,16 +59,15 @@ public:
 	}
 };
 
-/* Snowflake */
+/* Koch Snowflake */
 class Snowflake
 {
 public:
 	GLfloat X, Y, WindowWidth, WindowHeight;
-	Snowflake(GLfloat x = 0.0, GLfloat y = 0.0, GLint n = 1)
+	Snowflake()
 	{
-		this->X = x;
-		this->Y = y;
-		this->count = n;
+		length = 0.005;
+		iteration = 2;
 	}
 	void Set(GLfloat windowWidth, GLfloat windowHeight)
 	{
@@ -85,15 +85,14 @@ public:
 		_Draw(-120.0, iteration);
 		_Draw(120.0, iteration);
 		glEnd();
-		glFlush();
 	}
 private:
-	GLfloat length = 0.005;
-	GLint iteration = 2, count;
+	GLfloat length;
+	GLint iteration;
 	void _Draw(GLfloat angle, GLint iteration)
 	{
 		GLdouble radian = 0.0174533 * angle;
-		GLfloat 
+		GLfloat
 			newX = this->X + length * cos(radian) * this->WindowWidth,
 			newY = this->Y + length * sin(radian) * this->WindowHeight;
 

@@ -11,9 +11,9 @@ using namespace std;
 static const GLfloat PI = 3.14159265358979f;
 static const int FlowerSpeed[3][5] =
 { 
-	{ 5, 10, 0, 5, 6 }, 
-	{ 2, 6, 0, 2, 3 }, 
-	{ 1, 3, 0, 1, 1 }
+	{ 5, 12, 0, 5, 6 }, 
+	{ 2, 8, 0, 2, 3 }, 
+	{ 1, 4, 0, 1, 1 }
 };
 static Color BrownWindow(0.54, 0.27, 0.07);
 static Color GreenFlower(0.2, 0.6, 0.2);
@@ -59,12 +59,11 @@ static const int
 static unsigned int
 	Time = SunnyDay, 
 	Milliseconds = 0,
-	WindowWidth = 1024,
-	WindowHeight = 800,
 	RainbowStart = 0,
 	RainbowEnd = 0,
 	SpokesRotation = 0;
 static bool EclipseEnding = false;
+static GLsizei WindowWidth, WindowHeight;
 static GLfloat
 	FlowerRotation = 0.0,
 	EclipseX = 0.0,
@@ -104,7 +103,7 @@ static inline void DrawSmoothCircle(GLfloat x, GLfloat y, GLfloat radius, Color 
 {
 	glBegin(GL_POLYGON);
 	glColor3f(color.R, color.G, color.B);
-	for (GLfloat i = 0; i <= 2 * PI; i += 0.05)
+	for (GLfloat i = 0; i <= 2 * PI; i += 0.04)
 		glVertex2f(x + radius * cos(i), y + radius * sin(i));
 	glEnd();
 }
@@ -200,7 +199,7 @@ static void DrawRainbow()
 	width = WindowWidth * 0.002;
 	height = WindowHeight * 0.01;
 
-	if (RainbowEnd >= WindowWidth)
+	if (RainbowEnd >= (GLfloat)WindowWidth)
 		RainbowStart += width;
 	else
 		RainbowEnd += width;
@@ -394,8 +393,8 @@ static void DrawGreenSpiral(GLfloat x, GLfloat y)
 	for (int segment = 0; segment < 70; segment++)
 	{
 		DrawLine(length);
-		glRotatef(45, 0, 0, 1);
 		length += 0.001;
+		glRotatef(45, 0, 0, 1);
 		glPushMatrix();
 		glRotatef(60, 0, 0, 1);
 		DrawLine(length);
@@ -416,8 +415,8 @@ void DrawBlueSpiral(GLfloat x, GLfloat y)
 	for (int segment = 0; segment < 100; segment++)
 	{
 		glTranslatef(0, WindowHeight * length, 0);
-		glRotatef(45, 0, 0, 1);
 		length += 0.001;
+		glRotatef(45, 0, 0, 1);
 		glPushMatrix();
 		glRotatef(210, 0, 0, 1);
 		DrawLine(length);
@@ -493,7 +492,7 @@ static void DrawSpokes(GLfloat x, GLfloat y)
 	deltaX = radius / 1.4;
 	deltaY = radius / 1.5;
 
-	glColor3ub(0, 0, 0);
+	glColor3ub(0.0, 0.0, 0.0);
 	glBegin(GL_LINES);
 	if (SpokesRotation >= delay && (CarX < WindowWidth * 0.65 || CarX > WindowWidth * 0.7 || Time == SunnyDay))
 	{
@@ -530,33 +529,33 @@ static void DrawSnowMan()
 /* Draw a car. */
 static void DrawCar()
 {
-	GLfloat x1, x2, y1, y2, wheel1, wheel2, wheelHeight;
+	GLfloat x1, x2, y1, y2, wheelX1, wheelX2, wheelY;
 
-	wheelHeight = WindowHeight * 0.07;
-	wheel1 = CarX;
-	wheel2 = CarX + WindowWidth * 0.1;
+	wheelY = WindowHeight * 0.07;
+	wheelX1 = CarX;
+	wheelX2 = CarX + WindowWidth * 0.1;
 
 	glPushMatrix();
 	// Body
 	glColor3f(ColorCar.R, ColorCar.G, ColorCar.B);
 
-	x1 = wheel1 - WindowWidth * 0.05;
-	y1 = wheelHeight + WindowHeight * 0.05;
-	x2 = wheel2 + WindowWidth * 0.05;
-	y2 = wheelHeight + WindowHeight * 0.005;
+	x1 = wheelX1 - WindowWidth * 0.05;
+	y1 = wheelY + WindowHeight * 0.05;
+	x2 = wheelX2 + WindowWidth * 0.05;
+	y2 = wheelY + WindowHeight * 0.005;
 	glRectf(x1, y1, x2, y2);
 
-	x1 = wheel1 + (wheel2 - wheel1) / 4;
-	y1 = wheelHeight + WindowHeight * 0.1;
-	x2 = x1 + (wheel2 - wheel1) / 2;
-	y2 = wheelHeight + WindowHeight * 0.005;
+	x1 = wheelX1 + (wheelX2 - wheelX1) / 4;
+	y1 = wheelY + WindowHeight * 0.1;
+	x2 = x1 + (wheelX2 - wheelX1) / 2;
+	y2 = wheelY + WindowHeight * 0.005;
 	glRectf(x1, y1, x2, y2);
 
 	// Wheels
-	DrawSmoothCircle(wheel1, wheelHeight, WindowWidth * 0.02, SilverWheel);
-	DrawSmoothCircle(wheel2, wheelHeight, WindowWidth * 0.02, SilverWheel);
-	DrawSpokes(wheel1, wheelHeight);
-	DrawSpokes(wheel2, wheelHeight);
+	DrawSmoothCircle(wheelX1, wheelY, WindowWidth * 0.02, SilverWheel);
+	DrawSmoothCircle(wheelX2, wheelY, WindowWidth * 0.02, SilverWheel);
+	DrawSpokes(wheelX1, wheelY);
+	DrawSpokes(wheelX2, wheelY);
 	glPopMatrix();
 }
 
@@ -564,7 +563,6 @@ static void DrawCar()
 void Display(void)
 {	
 	glPushMatrix();
-	glLineWidth(2);
 	DrawGroundSky();
 	DrawMountains();
 	if (Time == SunnyDay) DrawRainbow();
@@ -593,24 +591,33 @@ void Display(void)
 }
 
 /* Reshape callback. */
-void Reshape(int Width, int Height)
+static void Reshape(GLsizei width, GLsizei height)
 {
-	WindowWidth = Width;
-	WindowHeight = Height;
-	for (int i = 0; i < DropsCount; i++)
-	{
-		SnowDrop[i].X = RainDrop[i].X = rand() % Width;
-		SnowDrop[i].Y = RainDrop[i].Y = rand() % Height;
-	}
-	glViewport(0, 0, (GLsizei)Width, (GLsizei)Height);
+	GLfloat ratio = (GLfloat)width / (GLfloat)height;
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0.0, (GLdouble)Width, 0.0, (GLdouble)Height);
-	Display();
+	gluOrtho2D(0, width, 0, height);
+
+	// Check aspect ratio
+	(ratio > width / height)?
+		glViewport(0, 0, width, (GLsizei)(width / ratio)) :
+		glViewport(0, 0, (GLsizei)(height * ratio), height);
+
+	// Update starting position of snow and rain drops
+	for (int i = 0; i < DropsCount; i++)
+	{
+		SnowDrop[i].X = RainDrop[i].X = rand() % width;
+		SnowDrop[i].Y = RainDrop[i].Y = rand() % height;
+	}
+
+	// Update global variables
+	WindowWidth = width;
+	WindowHeight = height;
 }
 
 /* Timer Tick callback. */
-void TimerFunction(int value)
+static void TimerFunction(int value)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -674,9 +681,9 @@ void TimerFunction(int value)
 			if (RainDrop[i].X < 0) RainDrop[i].X = WindowWidth;
 			if (RainDrop[i].Y < 0) RainDrop[i].Y = WindowHeight;
 			glVertex2f(RainDrop[i].X, RainDrop[i].Y);
-			glVertex2f(RainDrop[i].X + 10, RainDrop[i].Y + 10);
-			RainDrop[i].X -= 15;
-			RainDrop[i].Y -= 15;
+			glVertex2f(RainDrop[i].X + WindowWidth * 0.014, RainDrop[i].Y + WindowHeight * 0.014);
+			RainDrop[i].X -= WindowWidth * 0.024;
+			RainDrop[i].Y -= WindowHeight * 0.024;
 		}
 		glEnd();
 	}
@@ -690,8 +697,8 @@ void TimerFunction(int value)
 			if (SnowDrop[i].X < 0) SnowDrop[i].X = WindowWidth;
 			if (SnowDrop[i].Y < 0) SnowDrop[i].Y = WindowHeight;
 			Flake.Draw(SnowDrop[i].X, SnowDrop[i].Y);
-			SnowDrop[i].X -= 1;
-			SnowDrop[i].Y -= 1;
+			SnowDrop[i].X -= WindowWidth * 0.001;
+			SnowDrop[i].Y -= WindowHeight * 0.001;
 		}
 	}
 
@@ -735,16 +742,28 @@ static void MenuClick(int option)
 	}
 }
 
+static inline void init(void)
+{
+	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glLineWidth(2.0);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0.0, WindowWidth, 0.0, WindowHeight);
+	glViewport(0, 0, WindowWidth, WindowHeight);
+}
+
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
-	glutInitWindowPosition(500, 200);
+
+	// Set window size
+	WindowWidth = (GLsizei)(glutGet(GLUT_SCREEN_WIDTH) * 0.8);
+	WindowHeight = (GLsizei)(glutGet(GLUT_SCREEN_HEIGHT) * 0.8);
 	glutInitWindowSize(WindowWidth, WindowHeight);
+
+	// Create window, set callback functions and start
 	glutCreateWindow("2D Animation");
-	glClearColor(1.0, 1.0, 1.0, 1.0);
-	glutDisplayFunc(Display);
-	glutReshapeFunc(Reshape);
 	glutCreateMenu(MenuClick);
 	glutAddMenuEntry("A sunny day", 1);
 	glutAddMenuEntry("A rainy night", 2);
@@ -753,6 +772,9 @@ int main(int argc, char **argv)
 	glutAddMenuEntry("A solar eclipse", 5);
 	glutAddMenuEntry("Quit", 6);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
+	init();
+	glutDisplayFunc(Display);
+	glutReshapeFunc(Reshape);
 	glutTimerFunc(25, TimerFunction, 0);
 	glutMainLoop();
 	return 0;
